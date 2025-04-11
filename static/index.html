@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>📺 Video Downloader</title>
+    <style>
+        /* Smooth background with blur effect */
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            margin: 40px;
+            background: url('https://wallpaperbat.com/img/456065-education-background-education-wallpaper-catholic-education-wallpaper-and-education-background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            position: relative;
+        }
+
+        /* Blur overlay for better contrast */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* Darkened overlay */
+            backdrop-filter: blur(8px);
+            z-index: -1;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.7);
+        }
+
+        label {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        select {
+            font-size: 1rem;
+            padding: 12px;
+            width: 220px;
+            border-radius: 8px;
+            border: 1px solid #fff;
+            background: rgba(255, 255, 255, 0.8);
+            color: rgb(8, 85, 39);
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        /* Modernized buttons */
+        button {
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(45deg, rgb(8, 85, 39), rgb(34, 139, 34));
+            color: white;
+            cursor: pointer;
+            transition: 0.3s ease;
+            margin: 10px;
+            box-shadow: 0px 4px 15px rgba(8, 85, 39, 0.4);
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background: linear-gradient(45deg, #000, rgb(8, 85, 39));
+            box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .video-list {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .video-item {
+            background: rgba(255, 255, 255, 0.1); /* Semi-transparent elegance */
+            padding: 20px;
+            border-radius: 15px;
+            width: 320px;
+            margin: 10px;
+            box-shadow: 0px 0px 15px rgba(8, 85, 39, 0.5);
+            text-align: center;
+        }
+
+        img {
+            width: 100%;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0px 4px 12px rgba(8, 85, 39, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <h1>📺 Video Downloader</h1>
+
+    <label>Select Class:</label>
+    <select id="classSelect">
+        <option value="class_9">Class 9</option>
+        <option value="class_10">Class 10</option>
+    </select>
+
+    <label>Select Preferred Language:</label>
+    <select id="languageSelect">
+        <option value="english">English</option>
+        <option value="hindi">Hindi</option>
+    </select>
+    <br>
+    <button onclick="fetchVideos()">Load Videos</button>
+    <div class="video-list" id="videoList"></div>
+
+    <button id="downloadAllButton" onclick="downloadAll()">Download All as ZIP</button>
+
+    <script>
+        let videoUrls = [];
+
+        function fetchVideos() {
+            const selectedClass = document.getElementById("classSelect").value;
+            const selectedLanguage = document.getElementById("languageSelect").value;
+            const classLanguage = `${selectedClass}_${selectedLanguage}`;
+
+            fetch(`/videos?class_language=${classLanguage}`)
+            .then(response => response.json())
+            .then(data => {
+                const videoListDiv = document.getElementById("videoList");
+                videoListDiv.innerHTML = "";
+                videoUrls = []; // Clear previous video URLs
+
+                if (data.error) {
+                    videoListDiv.innerHTML = `<p style="color:red">${data.error}</p>`;
+                    return;
+                }
+
+                data.video_links.forEach(video => {
+                    const videoItem = document.createElement("div");
+                    videoItem.classList.add("video-item");
+                    
+                    const thumbnailUrl = `https://img.youtube.com/vi/${video.video_id}/0.jpg`;
+
+                    videoItem.innerHTML = `
+                        <img src="${thumbnailUrl}" alt="Video Thumbnail" onclick="goto('${video.video_id}')"><br>
+                        <button onclick="downloadVideo('${video.url}')">Download</button>
+                        <button onclick="goto('${video.video_id}')">Go to YouTube</button>
+                    `;
+                    videoListDiv.appendChild(videoItem);
+
+                    videoUrls.push(video.url);
+                });
+            })
+            .catch(error => console.error("Fetch failed:", error));
+        }
+
+        function downloadVideo(url) {
+            fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = url.split("/").pop();
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            })
+            .catch(error => console.error("Download failed:", error));
+        }
+
+        function goto(videoId) {
+            if (videoId) {
+                window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+            } else {
+                alert("Invalid YouTube video link.");
+            }
+        }
+
+        async function downloadAll() {
+            if (videoUrls.length === 0) {
+                alert("No videos loaded yet!");
+                return;
+            }
+
+            const zip = new JSZip();
+            const promises = videoUrls.map(async (url, index) => {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                zip.file(`video_${index + 1}.mp4`, blob);
+            });
+
+            await Promise.all(promises);
+            zip.generateAsync({ type: "blob" }).then(zipFile => {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(zipFile);
+                link.download = "videos.zip";
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            });
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎤 Smart Voice Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* Smooth background with blur effect */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: url('https://wallpaperbat.com/img/456065-education-background-education-wallpaper-catholic-education-wallpaper-and-education-background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      text-align: center;
+      margin: 0;
+      padding: 30px;
+      color: #fff;
+      position: relative;
+    }
+
+    /* Blur overlay */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: -1;
+    }
+
+    h1 {
+      font-size: 3rem;
+      text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.7);
+    }
+
+    .label {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    select {
+      padding: 12px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #fff;
+      background: rgba(255, 255, 255, 0.8);
+      color: rgb(8, 85, 39);
+      cursor: pointer;
+    }
+
+    /* Modernized buttons */
+    button {
+      padding: 12px 30px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(45deg, rgb(8, 85, 39), rgb(34, 139, 34));
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0px 4px 15px rgba(8, 85, 39, 0.4);
+      margin: 15px;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(45deg, #000, rgb(8, 85, 39));
+      box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Output box */
+    #output {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      font-size: 1.4rem;
+      min-height: 80px;
+      box-shadow: 0px 4px 10px rgba(8, 85, 39, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧠 Smart Voice Assistant</h1>
+
+  <div class="label">Select Language:</div>
+  <select id="language">
+    <option value="en-IN">English</option>
+    <option value="hi-IN">Hindi (हिंदी)</option>
+    <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+    <option value="te-IN">Telugu (తెలుగు)</option>
+  </select>
+
+  <div class="label">Response Mode:</div>
+  <select id="mode">
+    <option value="text">Text</option>
+    <option value="voice">Voice</option>
+  </select>
+
+  <br>
+  <button onclick="startListening()">🎙️ Start Listening</button>
+
+  <div id="output">Say something after clicking the button...</div>
+
+  <script>
+    const output = document.getElementById("output");
+    const languageSelect = document.getElementById("language");
+    const modeSelect = document.getElementById("mode");
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const synth = window.speechSynthesis;
+
+    if (!SpeechRecognition) {
+      output.innerText = "❌ Your browser does not support Speech Recognition. Try Chrome or Edge.";
+    }
+
+    function startListening() {
+      if (!SpeechRecognition) return;
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = languageSelect.value;
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      output.innerText = "🎤 Listening... Please speak.";
+
+      try {
+        recognition.start();
+      } catch (e) {
+        output.innerText = "⚠️ Error starting voice recognition. Try again.";
+        return;
+      }
+
+      recognition.onaudiostart = () => {
+        output.innerText = "🎧 Capturing voice...";
+      };
+
+      recognition.onsoundstart = () => {
+        output.innerText = "🔊 Voice detected. Processing...";
+      };
+
+      recognition.onresult = (event) => {
+        const speech = event.results[0][0].transcript.trim();
+        output.innerHTML = `<strong>You said:</strong> ${speech}`;
+        handleResponse(speech, recognition.lang);
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === "no-speech") {
+          output.innerText = "⚠️ Could not hear anything. Please try speaking louder or closer to the mic.";
+        } else {
+          output.innerText = `⚠️ Error: ${event.error}`;
+        }
+      };
+
+      recognition.onend = () => {
+        console.log("Recognition stopped.");
+      };
+    }
+
+    function handleResponse(input, lang) {
+    const languageMapping = {
+        "en-IN": "English",
+        "hi-IN": "Hindi",
+        "kn-IN": "Kannada",
+        "te-IN": "Telugu"
+    };
+
+    const selectedLanguage = languageMapping[lang] || "English"; 
+
+    fetch('/gemini-response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: input, language: selectedLanguage })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const reply = data.answer;
+        document.getElementById("output").innerHTML += `<br><strong>Assistant:</strong> ${reply}`;
+
+        if (modeSelect.value === "voice") {
+            speakText(reply, lang);
+        }
+    })
+    .catch(error => console.error("Gemini API Error:", error));
+}
+
+function speakText(message, lang) {
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = lang;
+    utterance.rate = 1;
+
+    const voices = synth.getVoices();
+    console.log("Available Voices:", voices);
+
+    const matchedVoice = voices.find(voice => voice.lang.startsWith(lang));
+    if (matchedVoice) {
+        utterance.voice = matchedVoice;
+    }
+
+    synth.speak(utterance);
+    output.innerHTML += `<br><strong>Assistant (speaking):</strong> ${message}`;
+}
+  </script>
+</body>
+</html>

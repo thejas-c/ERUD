@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎓 Quiz Time!</title>
+  <style>
+    /* Smooth background with blur effect */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: url('https://wallpaperbat.com/img/456065-education-background-education-wallpaper-catholic-education-wallpaper-and-education-background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      text-align: center;
+      margin: 0;
+      padding: 30px;
+      color: #fff;
+      position: relative;
+    }
+
+    /* Blur overlay */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: -1;
+    }
+
+    h1 {
+      font-size: 3rem;
+      text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.7);
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      margin: 30px auto;
+      max-width: 600px;
+      box-shadow: 0 10px 30px rgba(8, 85, 39, 0.4);
+    }
+
+    #question-img {
+      max-width: 250px;
+      border-radius: 12px;
+      margin: 20px 0;
+      box-shadow: 0 5px 15px rgba(8, 85, 39, 0.4);
+    }
+
+    input[type="text"] {
+      padding: 12px;
+      font-size: 1.2rem;
+      border-radius: 10px;
+      border: 1px solid #fff;
+      width: 70%;
+      background: rgba(255, 255, 255, 0.8);
+      color: rgb(8, 85, 39);
+    }
+
+    /* Modernized buttons */
+    button {
+      padding: 12px 30px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(45deg, rgb(8, 85, 39), rgb(34, 139, 34));
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0px 4px 15px rgba(8, 85, 39, 0.4);
+      margin: 10px;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(45deg, #000, rgb(8, 85, 39));
+      box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    #feedback {
+      font-size: 1.4rem;
+      margin-top: 15px;
+    }
+
+    .score {
+      font-size: 1.5rem;
+      margin-top: 25px;
+      color: olive;
+    }
+
+    .back-btn {
+      background: olive;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧠 Quiz Time!</h1>
+  <div class="quiz-container">
+    <p><strong>Answer the question below using your voice or by typing:</strong></p>
+    
+    <!-- Question -->
+    <p id="question">What is the capital of France?</p>
+    <img id="question-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Paris_Night.jpg/800px-Paris_Night.jpg" alt="Paris City" />
+
+    <!-- Answer Input -->
+    <input type="text" id="textAnswer" placeholder="Type your answer..." />
+    <br />
+    <button onclick="submitTextAnswer()">Submit</button>
+    <button onclick="startVoiceRecognition()">🎤 Speak</button>
+
+    <!-- Feedback -->
+    <p id="feedback"></p>
+
+    <!-- Score -->
+    <div class="score">🌟 Score: <span id="score">0</span></div>
+  </div>
+
+  <button class="back-btn" onclick="goBack()">🏠 Back to Main Page</button>
+
+  <script>
+    let score = 0;
+
+    function submitTextAnswer() {
+      const answer = document.getElementById('textAnswer').value.trim().toLowerCase();
+      checkAnswer(answer);
+    }
+
+    function startVoiceRecognition() {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(() => {
+          startRecognition();
+        })
+        .catch(() => {
+          alert("⚠️ Please enable microphone access!");
+        });
+    }
+
+    function startRecognition() {
+      if ('webkitSpeechRecognition' in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.start();
+
+        recognition.onresult = function (event) {
+          const voiceAnswer = event.results[0][0].transcript.trim().toLowerCase();
+          checkAnswer(voiceAnswer);
+        };
+
+        recognition.onerror = function (event) {
+          document.getElementById('feedback').textContent = '⚠️ Error: ' + event.error;
+          document.getElementById('feedback').style.color = 'orange';
+        };
+      } else {
+        alert('⚠️ Voice recognition is not supported in your browser.');
+      }
+    }
+
+    function checkAnswer(answer) {
+      const correctAnswer = 'paris';
+      const feedback = document.getElementById('feedback');
+      if (answer === correctAnswer) {
+        feedback.innerHTML = '✅ Correct! 🗼 Paris is right!';
+        feedback.style.color = 'limegreen';
+        score += 10;
+      } else {
+        feedback.innerHTML = '❌ Oops! Try again...';
+        feedback.style.color = 'red';
+      }
+      document.getElementById('score').textContent = score;
+      document.getElementById('textAnswer').value = '';
+    }
+
+    function goBack() {
+      window.location.href = 'ed.html';
+    }
+  </script>
+
+</body>
+</html>
