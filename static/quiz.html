@@ -113,7 +113,7 @@
     <input type="text" id="textAnswer" placeholder="Type your answer..." />
     <br />
     <button onclick="submitTextAnswer()">Submit</button>
-    <button onclick="startVoiceRecognition()">🎤 Speak</button>
+  
 
     <!-- Feedback -->
     <p id="feedback"></p>
@@ -132,38 +132,7 @@
       checkAnswer(answer);
     }
 
-    function startVoiceRecognition() {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(() => {
-          startRecognition();
-        })
-        .catch(() => {
-          alert("⚠️ Please enable microphone access!");
-        });
-    }
-
-    function startRecognition() {
-      if ('webkitSpeechRecognition' in window) {
-        const recognition = new webkitSpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.start();
-
-        recognition.onresult = function (event) {
-          const voiceAnswer = event.results[0][0].transcript.trim().toLowerCase();
-          checkAnswer(voiceAnswer);
-        };
-
-        recognition.onerror = function (event) {
-          document.getElementById('feedback').textContent = '⚠️ Error: ' + event.error;
-          document.getElementById('feedback').style.color = 'orange';
-        };
-      } else {
-        alert('⚠️ Voice recognition is not supported in your browser.');
-      }
-    }
+   
 
     function checkAnswer(answer) {
       const correctAnswer = 'paris';
@@ -181,7 +150,7 @@
     }
 
     function goBack() {
-      window.location.href = 'ed.html';
+      window.location.href = 'nav.html';
     }
   </script>
 

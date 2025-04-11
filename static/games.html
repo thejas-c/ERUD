@@ -161,7 +161,7 @@
     <p class="feedback" id="sudokuFeedback"></p>
   </div>
 
-  <button class="back-btn" onclick="window.location.href='ed.html'">🏠 Back to Main Page</button>
+  <button class="back-btn" onclick="window.location.href='nav.html'">🏠 Back to Main Page</button>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -193,20 +193,58 @@
         '', '', '', 4, 1, 9, '', '', 5,
         '', '', '', '', 8, '', '', 7, 9][i]);
 
-    function generateSudokuGrid() {
+        function generateSudokuGrid() {
         const grid = document.getElementById('sudokuGrid');
         grid.innerHTML = "";
-        starterSudoku.forEach((value, i) => {
+
+        for (let i = 0; i < 81; i++) {
             const cell = document.createElement('input');
             cell.type = 'text';
             cell.maxLength = 1;
-            if (value !== '') {
-                cell.value = value;
+
+            if (starterSudoku[i] !== '') {
+                cell.value = starterSudoku[i];
                 cell.disabled = true;
                 cell.classList.add('prefilled');
             }
+
             grid.appendChild(cell);
-        });
+        }
+    }
+
+    function checkSudoku() {
+        const cells = document.querySelectorAll('#sudokuGrid input');
+        const grid = Array.from(cells).map(cell => parseInt(cell.value) || 0);
+        const feedback = document.getElementById('sudokuFeedback');
+
+        function isValidGroup(group) {
+            const nums = group.filter(n => n !== 0);
+            return new Set(nums).size === nums.length;
+        }
+
+        for (let i = 0; i < 9; i++) {
+            const row = grid.slice(i * 9, i * 9 + 9);
+            const col = grid.filter((_, idx) => idx % 9 === i);
+            const square = [];
+
+            const startRow = Math.floor(i / 3) * 3;
+            const startCol = (i % 3) * 3;
+
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 3; c++) {
+                    square.push(grid[(startRow + r) * 9 + (startCol + c)]);
+                }
+            }
+
+            if (!isValidGroup(row) || !isValidGroup(col) || !isValidGroup(square)) {
+                feedback.textContent = "❌ Oops! There are duplicates or missing numbers.";
+                feedback.style.color = "red";
+                return;
+            }
+        }
+
+        feedback.textContent = "✅ Great work! Sudoku is valid!";
+        feedback.style.color = "limegreen";
     }
   </script>
 </body>
