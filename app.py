@@ -7,12 +7,12 @@ from urllib.parse import urlparse, parse_qs
 import google.generativeai as genai
 
 # Set up Gemini API key
-genai.configure(api_key="AIzaSyCKKrrCR7EG7-jiGXwsydId7hE2joMHD_0")
+genai.configure(api_key="YOUR_GEN_AI_API_KEY")
 
 app = Flask(__name__, static_folder="static")
 CORS(app)  
 
-API_KEY = "AIzaSyCZn_U4IaH5ioUjZKakq0rYf8aKRkk_VLw"
+API_KEY = "GOOGLE_SHEETS_API_KEY"
 
 # Mapping class & language selections to Google Sheets IDs
 SHEET_MAP = {
